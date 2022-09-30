@@ -1,0 +1,59 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: workshop-nginx
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$1
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  rules:
+    - host: {{ $.Values.nginx.ingress.host }}
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: nginx # <-- points to the service defined after this resource (~10 lines lower)
+                port:
+                  number: {{ $.Values.nginx.ingress.port }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx
+  namespace: {{ $.Release.Namespace }}
+spec:
+  ports:
+    - port: 80
+      targetPort: 80
+  selector:
+    app: nginx
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    app: nginx
+    project: workshop
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+        project: workshop
+    spec:
+      containers:
+        - name: nginx
+          image: {{ $.Values.nginx.image }}
+          imagePullPolicy: {{ $.Values.php.imagePullPolicy }}
+          ports:
+            - containerPort: 80
+              protocol: TCP

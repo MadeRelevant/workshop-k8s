@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: php
+  namespace: {{ $.Release.Namespace }}
+spec:
+  ports:
+    - port: 9000
+      targetPort: 9000
+  selector:
+    app: php
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: php
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    app: php
+    project: workshop
+spec:
+  selector:
+    matchLabels:
+      app: php
+  template:
+    metadata:
+      labels:
+        app: php
+        project: workshop
+    spec:
+      containers:
+        - name: php
+          image: {{ $.Values.php.image }}
+          imagePullPolicy: {{ $.Values.php.imagePullPolicy }}
+          ports:
+            - containerPort: 9000
+              protocol: TCP

@@ -1,0 +1,22 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: clear-messages
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    app: clear-messages
+spec:
+  schedule: "* * * * *"
+  suspend: {{ not $.Values.cronjobs.clearMessages.enabled }}
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          restartPolicy: OnFailure
+          containers:
+            - name: php
+              image: {{ $.Values.php.image }}
+              imagePullPolicy: {{ $.Values.php.imagePullPolicy }}
+              command:
+                - php
+                - /code/clear.cronjob.php
