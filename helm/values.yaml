@@ -1,4 +1,5 @@
 php:
+  # Dont understand
   # Don't pull ever because it should be retrieved from the docker daemon which we populated from our host machine
   imagePullPolicy: Never
   image: workshop-php
