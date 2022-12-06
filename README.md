@@ -63,7 +63,10 @@ System specs:
 - Internet connection
 - Container or virtual machine manager, such as: Docker, Hyperkit, Hyper-V, KVM, Parallels, Podman, VirtualBox, or VMware Fusion/Workstation
 
-Install / setup:
+# Install / setup:
+
+Below we will get the tools installed that we require for this workshop.  
+Most of them are probably already installed, skip those as you like. 
 
 ## Install Git
 
@@ -131,8 +134,9 @@ minikube start
 
 Lastly we need to enable the nginx ingress add-on, this way an ingress created in the cluster we can make it reachable via our host network.  
 This means that the k8s add-on will automatically create a bridge for us when it detects an ingress resource.  
-Public cloud providers will create a load balancer with a public IP for example.  
-To make it even more juicy, you can even install another _controller_ that also watches the ingresses and automatically creates DNS records for you.  
+
+> Public cloud providers could create a load balancer with a public IP if you like.  
+> You can make it even more juicy. You could install a _controller_ in your cluster that watches ingresses and automatically manages your DNS records for you.  
 
 Back to our setup, enable the add-on for our minikube cluster as following:
 
@@ -619,23 +623,46 @@ The steps are as following:
 Good luck! 😎  
 ~~in exercise-answers is the fully worked out cronjob, but try to figure it out yourself first~~
 
-## Scaling
+## Entry points
 
-In our minikube we will be using manual scaling for now.  
-The reason for this is, because minikube doesn't have excellent support for the metrics server and can be very buggy.  
+For this exercise we will add an entry-point to our PHP Dockerfile which will execute a command.  
+An entry-point is what is executed before the `CMD` of the Dockerfile is executed.  
+The entry-point can be seen as a proxy. Meaning you can even override the `CMD` or not execute it at all.  
 
-But the concept is still the same, except that we manually have to control the deployment.spec.replicas instead of letting the HPA do this for us.  
-The steps are quite simple:
+Within the MIG we make a lot of use of the `Makefiles` but in Dockerworld we actually only want to clone a project, up the containers and we _should_ be set.  
+In order to get rid of / minimize the Makefile we can use this entry point.  
 
-- Install apache benchmark
-- Do a first run: ```ab -n100 -c5 'http://workshop.test/index.php?benchmark=1'```
-- Note down how long this took
-- Update the helm chart to increase the php deployment to 5 replicas
-- Apply the update to the cluster
-- Verify the number of pods have been increased
-- Re-run the benchmark
+The steps are as following:
+
+- Create an entry-point file
+- Make sure to run the original entry point file at the end
+- Come up with a way to proof that the entry point is executed by echoing or clearing all messages for example
+- Update the Dockerfile so it actually uses the entry point
+- Run `docker-compose up/run php` to verify
+- Bonus: is the entry point also executed when running `docker-compose exec`?
+- Bonus: come up with other real world scenario's why you would want an entry point 
 
 Good luck! 😎
+
+## Scaling
+
+I've left this out because this is not a very testable exercise with our current minikube setup.
+
+~~In our minikube we will be using manual scaling for now.~~  
+~~The reason for this is, because minikube doesn't have excellent support for the metrics server and can be very buggy.~~  
+
+~~But the concept is still the same, except that we manually have to control the deployment.spec.replicas instead of letting the HPA do this for us.~~  
+~~The steps are quite simple:~~
+
+- ~~Install apache benchmark~~
+- ~~Do a first run: ```ab -n100 -c5 'http://workshop.test/index.php?benchmark=1'```~~
+- ~~Note down how long this took~~
+- ~~Update the helm chart to increase the php deployment to 5 replicas~~
+- ~~Apply the update to the cluster~~
+- ~~Verify the number of pods have been increased~~
+- ~~Re-run the benchmark~~
+
+~~Good luck! 😎~~
 
 ## Logging
 
@@ -662,8 +689,8 @@ To summarise what we have covered:
 - Updating images within a cluster with Helm and the fast way without Helm
 - Hooking into the Docker daemon of minikube instead of your local docker daemon
 - Bash-ing into running containers for local script execution and eventually troubleshooting
-- Inspecting/tailing pods
-- Very basic scaling concepts
+- Working with running pods
+- Docker entry points
 - CronJobs
 
 Any questions or requests to dig in deeper, ask!
