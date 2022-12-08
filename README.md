@@ -70,15 +70,17 @@ Most of them are probably already installed, skip those as you like.
 
 ## Install Git
 
-Linux: `sudo apt install git`  
+Linux: `sudo apt install git` 
+Mac: You can use Homebrew https://brew.sh/ and then execute `brew install git`
+
 Others: https://github.com/git-guides/install-git
 
 ## Install Docker
 
 For detailed instructions go here: https://docs.docker.com/get-docker/  
-For Linux users: https://docs.docker.com/engine/install/debian/#install-using-the-repository
+Linux: https://docs.docker.com/engine/install/debian/#install-using-the-repository
 
-**Post installation steps**  
+**Post installation steps for Linux**  
 To run docker as non-root user **don't skip this step**:  
 _For details: https://docs.docker.com/engine/install/linux-postinstall/_
 
@@ -101,6 +103,8 @@ docker run hello-world
 
 **stop after installation, rest is in this workshop**  
 Installation guide: https://minikube.sigs.k8s.io/docs/start/
+
+Mac: If you use Homebrew, you can use `brew install minikube`
 
 Execute the following to check you're ready to go:  
 _output could differ based on your local setup / OS_
@@ -200,7 +204,7 @@ ls -la
 # drwxrwxr-x  2 <user> <group>  4096 Sep 30 17:15 src
 ```
 
-> From here on all commands are executed from the `~/Documents/workshop` directory.
+> From here on all commands are executed from the `~/Documents/workshop` directory, or the one you've chosen.
 
 ## Getting our containers ready
 
@@ -219,6 +223,10 @@ We need a database for our workshop project. It is kept as simple as possible an
 Start by building the database container:  
 
 ```bash
+# Build the database container
+  # --target because we have a multistage Dockerfile we have to define what part we want to build
+  # -t is the image tag, which we reference when we want to actually run this container later on
+  # . (dot) is the build context which is the relative path within the Dockerfile
 DOCKER_BUILDKIT=1 docker build --target=db -t workshop-db .
 # [+] Building 10.3s (8/8) FINISHED                                                                                            
 #  => [internal] load build definition from Dockerfile                                                                    0.0s
@@ -241,7 +249,11 @@ DOCKER_BUILDKIT=1 docker build --target=db -t workshop-db .
 
 Start the container as following:
 ```bash
+# Start the database container we just built
+  # --rm so the container is removed after we shut it down
+  # workshop-db is the docker image we want to run. We defined this at build time with the -t (tag) flag
 docker run --name db --rm workshop-db
+TODO: ADD what this does
 # 2022-09-30 14:43:16+00:00 [Note] [Entrypoint]: Entrypoint script for MySQL Server 8.0.30-1.el8 started.
 # 2022-09-30 14:43:16+00:00 [Note] [Entrypoint]: Switching to dedicated user 'mysql'
 # 2022-09-30 14:43:16+00:00 [Note] [Entrypoint]: Entrypoint script for MySQL Server 8.0.30-1.el8 started.
@@ -252,13 +264,13 @@ docker run --name db --rm workshop-db
 
 To verify all is correct you should see `ready for connections` at the end of the last command. If this works proceed to the next step.
 
+> You will have to keep the terminal open and open a new one for the following steps.
+
+FIXME: cannot close DB
+
 ### NGINX container
 
 ```bash
-# Build the nginx container
-  # --target because we have a multistage Dockerfile we have to define what part we want to build
-  # -t is the image tag, which we reference when we want to actually run this container later on
-  # . (dot) is the build context which is the relative path within the Dockerfile
 DOCKER_BUILDKIT=1 docker build --target=nginx -t workshop-nginx .
 # [+] Building 3.9s (8/8) FINISHED                                                                                                                                                                                                                              
 #  => [internal] load build definition from Dockerfile                                                                                                                                                                                                     0.0s
@@ -281,14 +293,15 @@ DOCKER_BUILDKIT=1 docker build --target=nginx -t workshop-nginx .
 For testing and demonstration purposes we will (try to) start the containers locally first, without kubernetes.  
 
 ```bash
-# Start the nginx container we just build
+# Start the nginx container we just built
   # -p exposes port 80 of the container. Locally we can connect to port 8080 which connects to port 80 within the container
-  # --rm so the container is removed after we shut it down
-  # workshop-nginx is the docker image we want to run. We defined this at build time with the -t (tag) flag
 docker run -p 8080:80 --rm workshop-nginx
 # 2022/09/29 11:04:34 [emerg] 1#1: host not found in upstream "php" in /etc/nginx/conf.d/vhost.conf:10
 # nginx: [emerg] host not found in upstream "php" in /etc/nginx/conf.d/vhost.conf:10
 ```
+
+> If a port is already in use, close the dockers of your other projects.
+
  As you can see it is trying to look up the host `php` which doesn't exist yet. 
  Let's fix this by building and starting the php container.  
 
@@ -360,17 +373,20 @@ docker ps
 Secondly, we should be able to see our application in the browser by visiting: http://localhost:8080  
 If you can interact with the web application you can proceed to the next step: Deploying to kubernetes 🙌
 
+FIXME: No does not work
+
 # Deploying to the minikube cluster
 
 Now we have tested that our containers are able to build and, we have a running web application we can start deploying.    
 Because we didn't push our images to a public registry we need to connect with the docker daemon used by the minikube cluster.    
 This makes it possible for k8s to use images that we've built locally. This is a nice trick to know and will make testing/development much faster.    
 
+TODO: what does eval $(minikube docker-env) do
 ```bash
 # linux/osx users: 
 eval $(minikube docker-env) # leave the dollar sign out for fish users
 # windows:
-  # todo...
+  # todo... todo... todo-todo-todo...
 
 # verify you're connected to the minikube docker daemon
 docker ps
@@ -439,6 +455,12 @@ kubectl delete pod php
 # pod "php" deleted
 ```
 
+## Installing helm
+
+See: https://helm.sh/docs/intro/install/
+
+Mac: `brew install helm`
+
 ## Deploying with Helm
 
 > **Important:** make sure you are still using the shell where you are connected to the minikube daemon!  
@@ -447,6 +469,8 @@ Take some time to go over the contents inside the helm directory first.
 We have a values.yaml which are fed into the helm/templates/*.yaml files.  
 
 When you have a basic understanding of what is defined in the helm directory you can start installing the chart in your minikube cluster:  
+
+ERROR: Error: Kubernetes cluster unreachable: Get "https://127.0.0.1:64412/version": net/http: TLS handshake timeout
 
 ```bash
 #  --install so we can re-use this command even when it was already installed
